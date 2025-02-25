@@ -13,10 +13,11 @@ void *mcalloc(size_t size)
 
 int main()
 {
-    printf("Wtf\n");
-    void* ptr = ft_malloc(1024);
-
+    void* ptr = ft_malloc(0x510);
+    
     printf("ptr: %p\n", ptr);
-    free(ptr);
+    show_alloc_mem();
+    ft_free(ptr);
+    show_alloc_mem();
     return 0;
 }

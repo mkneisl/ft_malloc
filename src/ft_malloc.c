@@ -1,17 +1,19 @@
 #include "malloc_intrnl.h"
-t_arena arena;
 #include "stdio.h"
 
 void ft_free(void *ptr)
 {
-    t_free_chunk* pChunk;
+    t_free_chunk* chunk;
+    t_large_chunk* largeChunk;
 
     if (!ptr)
         return;
-    pChunk = (t_free_chunk*)((char*)ptr - sizeof(t_chunk));
-    if (pChunk->info.m)
+    largeChunk = NULL;
+    chunk = (t_free_chunk*)SKIP_STRUCT(ptr, t_chunk, -1);
+    if (chunk->info.zoneType == zone_large)
     {
-        destroyMappedChunk(pChunk);
+        largeChunk = (t_large_chunk*)SKIP_STRUCT(ptr, t_large_chunk, -1);
+        unmapLargeChunk(getContext(), largeChunk);
         return;
     }
 }
@@ -19,17 +21,19 @@ void ft_free(void *ptr)
 void *ft_malloc(size_t size)
 {
     t_free_chunk* targetChunk;
+    t_large_chunk* largeChunk;
 
     targetChunk = NULL;
-    if (size < LARGE_ALLOC)
+    if (size > MAX_SMALL_ALLOC)
     {
-        t_heap* heap = createHeap(&arena, HEAP_MAX_SIZE);
-        printf("Heap at %p -> %lx %x \n", heap, heap->size, HEAP_MAX_SIZE);
+        largeChunk = mapLargeChunk(getContext(), size);
+        if (!largeChunk)
+            return NULL;
+        return SKIP_STRUCT(largeChunk, t_large_chunk, 1);
     }
-    else
-    {
-        targetChunk = createMappedChunk(&arena, size);
-    }
+    t_zone_type zoneType = size <= MAX_TINY_ALLOC ? zone_tiny : zone_small;
+    t_zone* zone = mapZone(getContext(), zoneType, 0);
+    ft_printf("Heap at %p -> %lx \n", zone, (size_t)zone->size);
     // Find & Reserve fitting chunk
 
  
@@ -44,3 +48,4 @@ void *ft_realloc(void *ptr, size_t size)
     (void)size;
     return NULL;
 }
+

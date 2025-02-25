@@ -1,106 +1,106 @@
 #include "malloc_intrnl.h"
-#include <sys/mman.h>
 #include "stdio.h"
 #include "errno.h"
 #include <string.h>
 #include <unistd.h>
-#include "stdio.h"
+#include <sys/mman.h>
 
-void binAddFreeChunk(t_arena* pArena, t_chunk* pChunk)
+#define LIST_LINK(node, start)  node->prev = NULL; \
+                                if (start){ \
+                                    start->prev = node;\
+                                    node->next = start;\
+                                }\
+                                else\
+                                    node->next = NULL;\
+                                start = node;
+
+#define LIST_UNLINK(node, start)    if (node->next) \
+                                        node->next->prev = node->prev; \
+                                    if (!node->prev) \
+                                        start = node->next; \
+                                    else \
+                                        node->prev->next = node->next;
+
+    //LIST_LINK(context->zoneChunks[chunk->info.zoneType], chunk)
+    //LIST_UNLINK(chunk, context->zoneChunks[chunk->info.zoneType])
+
+t_free_chunk* initZone(t_zone* zone)
 {
-    t_free_chunk* pFreeChunk;
-
-    pFreeChunk = (t_free_chunk*)pChunk;
-    if (!pArena->binFirst)
-    {
-        pArena->binFirst = pFreeChunk;
-        pArena->binLast = pFreeChunk;
-        pFreeChunk->next = (t_free_chunk*)&pArena->binFirst;
-        pFreeChunk->prev = (t_free_chunk*)&pArena->binFirst;
-        return;
-    }
-    pArena->binFirst->prev = pFreeChunk;
-    pFreeChunk->prev = (t_free_chunk*)&pArena->binFirst;
-    pFreeChunk->next = pArena->binFirst;
-    pArena->binFirst = pFreeChunk;
-}
-//void createChunk(t_arena* pArena, )
-
-t_free_chunk* initMappedHeapChunk(t_heap* pHeap)
-{
-    t_free_chunk* pChunk;
+    t_free_chunk* chunk;
     
-    pChunk = (t_free_chunk*)((char*)pHeap + sizeof(t_heap));
-    pChunk->info.a = 1;
-    pChunk->info.m = 1;
-    pChunk->info.p = 1;
-    pChunk->info.size = (pHeap->size - sizeof(t_heap)) / 8;
-    return pChunk;
+    chunk = (t_free_chunk*)((char*)zone + sizeof(t_zone));
+    ft_memset(chunk, 0, sizeof(t_free_chunk));
+    chunk->info.zoneType = zone->type;
+    chunk->info.inUse = 1;
+    chunk->info.size = (zone->size - sizeof(t_zone)) / 8;
+    return chunk;
 }
 
-t_free_chunk* initHeapChunk(t_heap* pHeap)
+t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
 {
-    t_free_chunk* pChunk;
-    
-    pChunk = (t_free_chunk*)((char*)pHeap + sizeof(t_heap));
-    pChunk->info.a = 1;
-    pChunk->info.m = 0;
-    pChunk->info.p = 1;
-    pChunk->info.size = (pHeap->size - sizeof(t_heap)) / 8;
-    return pChunk;
-}
+    t_zone* zone;
+    void* mapped;
 
-t_heap* createHeap(t_arena* pArena, size_t size)
-{
-    t_heap* pHeap;
-    void* pMapped;
-    size_t overlap;
-
-    pMapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_NORESERVE , -1, 0);
-    if (pMapped == (void*)-1)
+    if (type == zone_tiny)
+        size = TINY_ZONE_SIZE;
+    if (type == zone_small)
+        size = SMALL_ZONE_SIZE;
+    mapped = mmap(NULL,
+        size, 
+        PROT_READ | PROT_WRITE, 
+        MAP_ANONYMOUS | MAP_PRIVATE | MAP_NORESERVE, 
+        -1, 0
+    );
+    if (mapped == (void*)-1)
     {
         printf("mmap failed %i - %s\n", errno, strerror(errno));
         return 0;
     }
-    pHeap = (t_heap*)ALIGN_UP(pMapped, HEAP_MAX_SIZE);
-    overlap = (uint64_t)pHeap - (uint64_t)pMapped;
-    if (munmap(pMapped, overlap) == -1)
-    {
-        printf("munmap failed %i - %s\n", errno, strerror(errno));
-    }
-    pHeap->pArena = pArena;
-    pHeap->size = size - overlap;
-    pHeap->prev = NULL;
-    return pHeap;
+    printf("mmap %p\n", mapped);
+    zone = (t_zone*)mapped;
+    ft_bzero(zone, sizeof(t_zone));
+    zone->context = context;
+    zone->size = size;
+    zone->type = type;
+    LIST_LINK(zone, context->zones[zone->type])
+    return zone;
 }
 
-t_free_chunk* createMappedChunk(t_arena* pArena, size_t size)
+void unmapZone(t_context* context, t_zone* zone)
 {
-    t_heap* pHeap;
+    LIST_UNLINK(zone, context->zones[zone->type])
+    munmap(zone, zone->size);
+}
 
-    size = size + sizeof(t_heap) + sizeof(t_chunk);
+t_large_chunk* mapLargeChunk(t_context* context, size_t size)
+{
+    t_large_chunk* largeChunk;
+    t_zone* zone;
+    size_t allocSize;
+
+    allocSize = size;
+    size = size + sizeof(t_zone) + sizeof(t_chunk);
     size = ALIGN_UP(size, getpagesize());
-    pHeap = createHeap(pArena, size);
-    if (!pHeap)
+    zone = mapZone(context, zone_large, size);
+    if (!zone)
     {
         return NULL;
     }
-    return initMappedHeapChunk(pHeap);
+    largeChunk = (t_large_chunk*)SKIP_STRUCT(zone, t_zone, 1);
+    largeChunk->zoneType = zone->type;
+    largeChunk->used = allocSize;
+    largeChunk->size = size;
+    return largeChunk;
 }
 
-void destroyMappedChunk(t_free_chunk* mappedChunk)
+void unmapLargeChunk(t_context* context, t_large_chunk* mappedChunk)
 {
-    destroyHeap((t_heap*)(mappedChunk - sizeof(t_heap)));
+    unmapZone(context, SKIP_STRUCT(mappedChunk, t_zone, -1));
 }
 
-void destroyHeap(t_heap* pHeap)
+t_context* getContext()
 {
-    munmap(pHeap, pHeap->size);
-}
+    static t_context context = {};
 
-t_arena* getContext()
-{
-    static bool intialized = false;
-
-    
+    return &context;
 }

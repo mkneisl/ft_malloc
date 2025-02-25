@@ -1,18 +1,18 @@
-NAME=libft_malloc.so
 BIN = bin
 
-
 FILE_NAMES = malloc_intrnl \
-			ft_malloc 
+			ft_malloc \
+			show_alloc
 OBJ_FILES = $(addprefix $(BIN)/, $(addsuffix .o , $(FILE_NAMES)))
+LIBFT=./libft/libft.a
 
-
-CFLAGS = -Werror -Wall -Wextra
+CFLAGS = -Werror -Wall -Wextra -g # -fsanitize=address
 
 ifeq ($(HOSTTYPE),)
 HOSTTYPE := $(shell uname -m)_$(shell uname -s)
 endif
-LIB_NAME=libft_malloc_$(HOSTTYPE).so
+NAME=libft_malloc_$(HOSTTYPE).so
+LINK_NAME=libft_malloc.so
 DIR_GUARD=@mkdir -p $(@D)
 
 all: $(NAME)
@@ -22,9 +22,11 @@ $(BIN)/%.o: ./src/%.c
 	cc -c $< $(CFLAGS) -o $@
 
 $(NAME): $(OBJ_FILES)
-	ar rc ./$(BIN)/$(LIB_NAME) $(OBJ_FILES)
-	ln -s ./$(BIN)/$(LIB_NAME) $(NAME)
-	cc -g $(CFLAGS) ./tests/main.c $(NAME) -o a.out
+	make -C ./ft_printf/ 
+	mv $(LIBFT) ./$(BIN)/$(NAME)
+	ar rc ./$(BIN)/$(NAME) $(OBJ_FILES)
+	ln -f -s ./$(BIN)/$(NAME) $(LINK_NAME)
+	cc -g $(CFLAGS) ./tests/main.c $(LINK_NAME) -o a.out
 
 
 clean:
@@ -32,6 +34,7 @@ clean:
 
 fclean:
 	rm -f $(NAME)
+	rm -f $(LINK_NAME)
 	rm -rf $(BIN)
 
 re: fclean $(NAME)
