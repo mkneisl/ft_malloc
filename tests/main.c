@@ -1,4 +1,5 @@
 #include "stdio.h"
+ #include <unistd.h>
 #include "../include/ft_malloc.h"
 
 void *mcalloc(size_t size)
@@ -13,11 +14,14 @@ void *mcalloc(size_t size)
 
 int main()
 {
-    void* ptr = ft_malloc(0x510);
+    printf("Pagesize: 0x%x\n-----------------\n", getpagesize());
+
+    void* ptr = ft_malloc(0x210);
     
-    printf("ptr: %p\n", ptr);
+    printf("ptr: %p\n-----------------\n", ptr);
     show_alloc_mem();
     ft_free(ptr);
+    printf("-----------------\n");
     show_alloc_mem();
     return 0;
 }

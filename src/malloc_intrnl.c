@@ -5,37 +5,6 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#define LIST_LINK(node, start)  node->prev = NULL; \
-                                if (start){ \
-                                    start->prev = node;\
-                                    node->next = start;\
-                                }\
-                                else\
-                                    node->next = NULL;\
-                                start = node;
-
-#define LIST_UNLINK(node, start)    if (node->next) \
-                                        node->next->prev = node->prev; \
-                                    if (!node->prev) \
-                                        start = node->next; \
-                                    else \
-                                        node->prev->next = node->next;
-
-    //LIST_LINK(context->zoneChunks[chunk->info.zoneType], chunk)
-    //LIST_UNLINK(chunk, context->zoneChunks[chunk->info.zoneType])
-
-t_free_chunk* initZone(t_zone* zone)
-{
-    t_free_chunk* chunk;
-    
-    chunk = (t_free_chunk*)((char*)zone + sizeof(t_zone));
-    ft_memset(chunk, 0, sizeof(t_free_chunk));
-    chunk->info.zoneType = zone->type;
-    chunk->info.inUse = 1;
-    chunk->info.size = (zone->size - sizeof(t_zone)) / 8;
-    return chunk;
-}
-
 t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
 {
     t_zone* zone;
@@ -56,7 +25,7 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
         printf("mmap failed %i - %s\n", errno, strerror(errno));
         return 0;
     }
-    printf("mmap %p\n", mapped);
+    printf("mmap %p - %p 0x%lx\n", mapped, (char*)mapped + size, size);
     zone = (t_zone*)mapped;
     ft_bzero(zone, sizeof(t_zone));
     zone->context = context;
