@@ -3,6 +3,8 @@ BIN = bin
 FILE_NAMES = malloc_intrnl \
 			ft_malloc \
 			show_alloc \
+			show_alloc_ex \
+			print_util \
 			chunk
 OBJ_FILES = $(addprefix $(BIN)/, $(addsuffix .o , $(FILE_NAMES)))
 LIBFT=./libft/libft.a

@@ -32,11 +32,26 @@ t_chunk* setupFreeChunk(t_context* context, char* addr, t_zone_type type, size_t
     return chunk;
 }
 
-void fuzeNeighbourChunks(t_context* context, t_chunk* chunk)
+t_chunk* fuzeNeighbourChunks(t_context* context, t_chunk* chunk)
 {
-    (void)context;
-    (void)chunk;
-    return ;
+    t_chunk* neighbourChunk;
+
+    neighbourChunk = NEXT_CHUNK(chunk);
+    if (!neighbourChunk->inUse && neighbourChunk->zoneType != zone_boundary)
+    {
+        LIST_UNLINK(neighbourChunk, context->zoneChunks[chunk->zoneType])
+        chunk->size += neighbourChunk->size;
+        *CHUNK_END_SIZE(chunk) = chunk->size;
+    }
+    if (chunk->prevInUse)
+        return chunk;
+    neighbourChunk = PREV_CHUNK(chunk);
+    if (neighbourChunk->zoneType == zone_boundary)
+        return chunk;
+    LIST_UNLINK(chunk, context->zoneChunks[chunk->zoneType])
+    neighbourChunk->size += chunk->size;
+    *CHUNK_END_SIZE(neighbourChunk) = neighbourChunk->size;
+    return neighbourChunk;
 }
 
 t_chunk* findFreeChunk(t_context* context, t_zone_type type, size_t size)
@@ -79,10 +94,8 @@ t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size)
             freeChunk->size - size
         );
         leftOverChunk->prevInUse = 1;
-        ft_printf("Chunk at %p -> 0x%x\n", leftOverChunk, leftOverChunk->size);
         chunk->size = size; 
     }
-    ft_printf("Allocated Chunk at %p -> 0x%x\n", chunk, chunk->size);
     return chunk;
 }
 
@@ -93,6 +106,7 @@ void freeChunk(t_context* context, t_chunk* chunk)
     NEXT_CHUNK(chunk)->prevInUse = 0;
     ft_bzero(chunk->data, sizeof(chunk->data));
     LIST_LINK(chunk, context->zoneChunks[chunk->zoneType])
+    *CHUNK_END_SIZE(chunk) = chunk->size;
 }
 
 t_chunk* mapChunk(t_context* context, t_zone_type type)
@@ -112,8 +126,9 @@ t_chunk* mapChunk(t_context* context, t_zone_type type)
         context, 
         (char*)boundaryChunk + boundaryChunk->size,
         type, 
-        zone->size - sizeof(t_zone) - (sizeof(t_chunk) - LINK_SIZE)
+        zone->size - sizeof(t_zone) - ((sizeof(t_chunk) - LINK_SIZE) * 2)
     );
+    freeChunk->prevInUse = 1;
     boundaryChunk = NEXT_CHUNK(freeChunk);
     ft_bzero(boundaryChunk, sizeof(t_chunk) - LINK_SIZE);
     boundaryChunk->size = sizeof(t_chunk) - LINK_SIZE;
