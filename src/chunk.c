@@ -99,6 +99,37 @@ t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size)
     return chunk;
 }
 
+t_chunk* enlargeChunk(t_context* context, t_chunk* chunk, size_t size)
+{
+    t_chunk* nextChunk;
+    t_chunk* leftOverChunk;
+
+    nextChunk = NEXT_CHUNK(chunk);
+    if (nextChunk->inUse 
+        || nextChunk->size > size - chunk->used)
+        return NULL;
+    LIST_UNLINK(nextChunk, context->zoneChunks[nextChunk->zoneType])
+    chunk->used = size;
+    size = ALIGN_UP(size, 8) + sizeof(t_chunk) - LINK_SIZE;
+    if (nextChunk->size - (size - chunk->size) < sizeof(t_chunk))
+    {
+        chunk->size += nextChunk->size;
+        NEXT_CHUNK(chunk)->inUse = 1;
+    }
+    else
+    {
+        leftOverChunk = setupFreeChunk(
+            context,
+            (char*)chunk + size,
+            chunk->zoneType,
+            nextChunk->size - (size - chunk->size)
+        );
+        leftOverChunk->prevInUse = 1;
+        chunk->size = size;
+    }
+    return chunk;
+}
+
 void freeChunk(t_context* context, t_chunk* chunk)
 {
     chunk->inUse = 0;

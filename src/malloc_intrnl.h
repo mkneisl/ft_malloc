@@ -108,6 +108,7 @@ t_chunk* fuzeNeighbourChunks(t_context* context, t_chunk* chunk);
 t_chunk* findFreeChunk(t_context* context, t_zone_type type, size_t size);
 
 t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size);
+t_chunk* enlargeChunk(t_context* context, t_chunk* chunk, size_t size);
 void freeChunk(t_context* context, t_chunk* chunk);
 
 t_chunk* setupFreeChunk(t_context* context, char* addr, t_zone_type type, size_t size);

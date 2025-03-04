@@ -49,7 +49,7 @@ void *ft_malloc(size_t size)
     zoneType = size <= MAX_TINY_ALLOC ? zone_tiny : zone_small;
 
     // Find & Reserve fitting chunk
-    freeChunk = findFreeChunk(context, zoneType, size + sizeof(size_t));
+    freeChunk = findFreeChunk(context, zoneType, ALIGN_UP(size + sizeof(size_t), 8));
     if (!freeChunk)
     {
         if (!(freeChunk = mapChunk(context, zoneType)))
@@ -65,8 +65,31 @@ void *ft_malloc(size_t size)
 
 void *ft_realloc(void *ptr, size_t size)
 {
-    (void)ptr;
-    (void)size;
+    t_context* context;
+    t_chunk* chunk;
+    t_large_chunk* largeChunk;
+
+    context = getContext();
+    if (!ptr)
+        return;
+    largeChunk = NULL;
+    chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
+    if (chunk->zoneType == zone_large)
+        return NULL; // Extend large zone
+    if (chunk->size - sizeof(t_chunk) >= size)
+    {
+        context->memoryUsed += size - chunk->used;
+        chunk->used = size;
+        return ptr;
+    }
+    context->memoryUsed -= chunk->used;
+    chunk = enlargeChunk(context, chunk, size);
+    if (chunk)
+    {
+        context->memoryUsed += chunk->used;
+        return chunk;
+    }
+    
     return NULL;
 }
 
