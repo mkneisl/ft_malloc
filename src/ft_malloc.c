@@ -1,7 +1,7 @@
 #include "malloc_intrnl.h"
 #include "stdio.h"
 
-void ft_free(void *ptr)
+void free(void *ptr)
 {
     t_context* context;
     t_chunk* chunk;
@@ -23,9 +23,10 @@ void ft_free(void *ptr)
     freeChunk(context, chunk);
     chunk = fuzeNeighbourChunks(context, chunk);
     unmapEmptyZone(context, chunk);
+    releaseContext(context);
 }
 
-void *ft_malloc(size_t size)
+void *malloc(size_t size)
 {
     t_context* context;
     t_zone_type zoneType;
@@ -50,15 +51,18 @@ void *ft_malloc(size_t size)
         if (!(availChunk = mapChunk(context, zoneType)))
             return NULL;
     }
-    return allocateChunk(context, availChunk, size)->data;
+    allocateChunk(context, availChunk, size);
+    releaseContext(context);
+    return availChunk->data;
 }
 
-void *ft_realloc(void *ptr, size_t size)
+void *realloc(void *ptr, size_t size)
 {
     t_context* context;
     t_chunk* chunk;
     t_large_chunk* largeChunk;
-    t_chunk* availChunk;
+    //t_chunk* availChunk;
+    void* data;
 
     context = getContext();
     if (!ptr)
@@ -67,8 +71,10 @@ void *ft_realloc(void *ptr, size_t size)
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
     if (chunk->zoneType == zone_large)
     {
-        (void)largeChunk;
-        return NULL; // Extend large zone
+        largeChunk = expandLargeChunk(context, largeChunk, size);
+        if (!largeChunk)
+            return NULL;
+        return SKIP_STRUCT(largeChunk, t_large_chunk, 1);
     }
     if (chunk->size - sizeof(t_chunk) >= size)
     {
@@ -82,14 +88,21 @@ void *ft_realloc(void *ptr, size_t size)
         context->memoryUsed += chunk->used;
         return chunk->data;
     }
-    availChunk = findFreeChunk(context, chunk->zoneType, ALIGN_UP(size + sizeof(size_t), 8));
-    if (!availChunk)
-    {
-        if (!(availChunk = mapChunk(context, chunk->zoneType)))
-            return NULL;
-    }
-    ft_memmove(availChunk->data, chunk->data, chunk->used);
+    // availChunk = findFreeChunk(context, chunk->zoneType, ALIGN_UP(size + sizeof(size_t), 8));
+    // if (!availChunk)
+    // {
+    //     if (!(availChunk = mapChunk(context, chunk->zoneType)))
+    //         return NULL;
+    // }
+    // ft_memmove(availChunk->data, chunk->data, chunk->used);
+    // freeChunk(context, chunk);
+    releaseContext(context);
+    data = malloc(size);
+    if (!data)
+        return NULL;
+    context = getContext();
+    ft_memmove(data, chunk->data, chunk->used);
     freeChunk(context, chunk);
-    return availChunk->data;
+    return data;
 }
 

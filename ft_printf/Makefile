@@ -6,7 +6,7 @@
 #    By: mkneisl <mkneisl@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/07/23 23:27:25 by mkneisl           #+#    #+#              #
-#    Updated: 2025/02/25 15:27:51 by mkneisl          ###   ########.fr        #
+#    Updated: 2025/03/06 18:17:22 by mkneisl          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME = libftprintf.a
 LIB = libft.a
 FILES = ft_itoa_sb.o ft_itoa_ub.o ft_printf_util.o ft_printf_parse.o ft_printf.o
 HEADER = libft.h ft_printf.h
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -g
 
 all: $(NAME)
 

@@ -25,7 +25,7 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
         return 0;
     }
     context->memoryMapped += size;
-    ft_printf("mmap %p - %p 0x%lx\n", mapped, (char*)mapped + size, size);
+    //ft_printf("mmap %p - %p 0x%lx\n", mapped, (char*)mapped + size, size);
     zone = (t_zone*)mapped;
     ft_bzero(zone, sizeof(t_zone));
     zone->context = context;
@@ -63,6 +63,30 @@ t_large_chunk* mapLargeChunk(t_context* context, size_t size)
     return largeChunk;
 }
 
+t_large_chunk* expandLargeChunk(t_context* context, t_large_chunk* largeChunk, size_t size)
+{
+    size_t mapSize;
+    t_large_chunk* mappedChunk;
+
+    if (largeChunk->size - sizeof(t_large_chunk) >= size)
+    {
+        context->memoryUsed += size - largeChunk->used;
+        largeChunk->used = size;
+        return largeChunk;
+    }
+    mapSize = ALIGN_UP(size, 8) + sizeof(t_large_chunk);
+    mappedChunk = mapLargeChunk(context, size);
+    if (!mappedChunk)
+        return NULL;
+    context->memoryUsed += size - largeChunk->used;
+    ft_memmove(
+        SKIP_STRUCT(mappedChunk, t_large_chunk, 1),
+        SKIP_STRUCT(largeChunk, t_large_chunk, 1),
+        largeChunk->used);
+    unmapLargeChunk(context, largeChunk);
+    return mappedChunk;
+}
+
 void unmapLargeChunk(t_context* context, t_large_chunk* mappedChunk)
 {
     unmapZone(context, SKIP_STRUCT(mappedChunk, t_zone, -1));
@@ -87,5 +111,14 @@ t_context* getContext()
 {
     static t_context context = {};
 
+    if (!context.mtxInit)
+        pthread_mutex_init(&context.mtx, NULL);
+    pthread_mutex_lock(&context.mtx);
     return &context;
 }
+
+void releaseContext(t_context* context)
+{
+    pthread_mutex_unlock(&context->mtx);
+}
+

@@ -34,7 +34,7 @@ void loopAllocations(t_zone* zone, t_callbacks* callbacks)
     while ((char*)chunk < ((char*)zone + zone->size))
     {
         callbacks->print_alloc(chunk);
-        chunk = (t_chunk*)((char*)chunk + chunk->size);
+        chunk = NEXT_CHUNK(chunk);
     }
 }
 

@@ -4,6 +4,7 @@
 # include "../include/ft_malloc.h"
 # include "../libft/libft.h"
 # include "../ft_printf/ft_printf.h"
+# include <pthread.h>
 
 # define ALIGN(val, align) (((uint64_t)val) & ~(align - 1))
 # define ALIGN_UP(val, align) (((uint64_t)val + (align - 1)) & ~(align - 1))
@@ -71,13 +72,6 @@ typedef struct s_large_chunk
     t_zone_type zoneType : 2;
 }t_large_chunk;
 
-// typedef struct s_free_chunk
-// {
-//     t_chunk info;
-//     struct s_free_chunk* next;
-//     struct s_free_chunk* prev;
-// }t_chunk;
-
 typedef struct s_zone
 {
     t_context* context;
@@ -89,7 +83,8 @@ typedef struct s_zone
 
 typedef struct s_context
 {
-    //mutex
+    pthread_mutex_t mtx;
+    char mtxInit;
     size_t memoryUsed;
     size_t allocationCount;
     size_t memoryMapped;
@@ -120,9 +115,11 @@ void unmapEmptyZone(t_context* context, t_chunk* chunk);
 
 t_large_chunk* mapLargeChunk(t_context* context, size_t size);
 void unmapLargeChunk(t_context* context, t_large_chunk* mappedChunk);
+t_large_chunk* expandLargeChunk(t_context* context, t_large_chunk* largeChunk, size_t size);
 
 void loopZones(t_context* context, t_callbacks* callbacks);
 
 t_context* getContext();
+void releaseContext(t_context* context);
 
 #endif
