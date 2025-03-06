@@ -21,7 +21,7 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
     );
     if (mapped == (void*)-1)
     {
-        printf("mmap failed %i - %s\n", errno, strerror(errno));
+        ft_printf("mmap failed %i - %s\n", errno, strerror(errno));
         return 0;
     }
     context->memoryMapped += size;

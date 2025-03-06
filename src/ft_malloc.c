@@ -20,8 +20,6 @@ void ft_free(void *ptr)
         unmapLargeChunk(context, largeChunk);
         return;
     }
-    context->allocationCount--;
-    context->memoryUsed -= chunk->used;
     freeChunk(context, chunk);
     chunk = fuzeNeighbourChunks(context, chunk);
     unmapEmptyZone(context, chunk);
@@ -31,12 +29,11 @@ void *ft_malloc(size_t size)
 {
     t_context* context;
     t_zone_type zoneType;
-    t_chunk* freeChunk;
+    t_chunk* availChunk;
     t_large_chunk* largeChunk;
-    t_chunk* allocation;
 
     context = getContext();
-    freeChunk = NULL;
+    availChunk = NULL;
     if (size > MAX_SMALL_ALLOC)
     {
         largeChunk = mapLargeChunk(context, size);
@@ -47,20 +44,13 @@ void *ft_malloc(size_t size)
         return SKIP_STRUCT(largeChunk, t_large_chunk, 1);
     }
     zoneType = size <= MAX_TINY_ALLOC ? zone_tiny : zone_small;
-
-    // Find & Reserve fitting chunk
-    freeChunk = findFreeChunk(context, zoneType, ALIGN_UP(size + sizeof(size_t), 8));
-    if (!freeChunk)
+    availChunk = findFreeChunk(context, zoneType, ALIGN_UP(size + sizeof(size_t), 8));
+    if (!availChunk)
     {
-        if (!(freeChunk = mapChunk(context, zoneType)))
+        if (!(availChunk = mapChunk(context, zoneType)))
             return NULL;
     }
-    allocation = allocateChunk(context, freeChunk, size);
-    if (!allocation)
-        return NULL;
-    context->allocationCount++;
-    context->memoryUsed += size;
-    return SKIP_STRUCT(allocation, size_t, 1);
+    return allocateChunk(context, availChunk, size)->data;
 }
 
 void *ft_realloc(void *ptr, size_t size)
@@ -68,14 +58,18 @@ void *ft_realloc(void *ptr, size_t size)
     t_context* context;
     t_chunk* chunk;
     t_large_chunk* largeChunk;
+    t_chunk* availChunk;
 
     context = getContext();
     if (!ptr)
-        return;
+        return NULL;
     largeChunk = NULL;
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
     if (chunk->zoneType == zone_large)
+    {
+        (void)largeChunk;
         return NULL; // Extend large zone
+    }
     if (chunk->size - sizeof(t_chunk) >= size)
     {
         context->memoryUsed += size - chunk->used;
@@ -83,13 +77,19 @@ void *ft_realloc(void *ptr, size_t size)
         return ptr;
     }
     context->memoryUsed -= chunk->used;
-    chunk = enlargeChunk(context, chunk, size);
-    if (chunk)
+    if (enlargeChunk(context, chunk, size))
     {
         context->memoryUsed += chunk->used;
-        return chunk;
+        return chunk->data;
     }
-    
-    return NULL;
+    availChunk = findFreeChunk(context, chunk->zoneType, ALIGN_UP(size + sizeof(size_t), 8));
+    if (!availChunk)
+    {
+        if (!(availChunk = mapChunk(context, chunk->zoneType)))
+            return NULL;
+    }
+    ft_memmove(availChunk->data, chunk->data, chunk->used);
+    freeChunk(context, chunk);
+    return availChunk->data;
 }
 

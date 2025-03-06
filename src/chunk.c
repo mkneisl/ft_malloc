@@ -96,6 +96,8 @@ t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size)
         leftOverChunk->prevInUse = 1;
         chunk->size = size; 
     }
+    context->allocationCount++;
+    context->memoryUsed += chunk->used;
     return chunk;
 }
 
@@ -132,6 +134,8 @@ t_chunk* enlargeChunk(t_context* context, t_chunk* chunk, size_t size)
 
 void freeChunk(t_context* context, t_chunk* chunk)
 {
+    context->allocationCount--;
+    context->memoryUsed -= chunk->used;
     chunk->inUse = 0;
     chunk->used = 0;
     NEXT_CHUNK(chunk)->prevInUse = 0;
