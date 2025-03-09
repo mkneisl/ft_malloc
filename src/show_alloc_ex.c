@@ -51,7 +51,7 @@ void show_alloc_mem_ex()
         print_allocation_ex,
         print_large_allocation_ex
     };
-
+    releaseContext(context);
     loopZones(context, &callbacks);
     ft_printf("Total Memory Used : %x bytes\n", context->memoryUsed);
     ft_printf("Total Memory Mapped : %x bytes (%i pages)\n", context->memoryMapped, context->memoryMapped / getpagesize());

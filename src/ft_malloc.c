@@ -7,9 +7,9 @@ void free(void *ptr)
     t_chunk* chunk;
     t_large_chunk* largeChunk;
 
-    context = getContext();
     if (!ptr)
         return;
+    context = getContext();
     largeChunk = NULL;
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
     if (chunk->zoneType == zone_large)
@@ -18,6 +18,7 @@ void free(void *ptr)
         context->allocationCount--;
         context->memoryUsed -= largeChunk->used;
         unmapLargeChunk(context, largeChunk);
+        releaseContext(context);
         return;
     }
     freeChunk(context, chunk);
@@ -39,9 +40,13 @@ void *malloc(size_t size)
     {
         largeChunk = mapLargeChunk(context, size);
         if (!largeChunk)
+        {
+            releaseContext(context);
             return NULL;
+        }
         context->allocationCount++;
         context->memoryUsed += size;
+        releaseContext(context);
         return SKIP_STRUCT(largeChunk, t_large_chunk, 1);
     }
     zoneType = size <= MAX_TINY_ALLOC ? zone_tiny : zone_small;
@@ -49,7 +54,10 @@ void *malloc(size_t size)
     if (!availChunk)
     {
         if (!(availChunk = mapChunk(context, zoneType)))
+        {
+            releaseContext(context);
             return NULL;
+        }
     }
     allocateChunk(context, availChunk, size);
     releaseContext(context);
@@ -64,28 +72,34 @@ void *realloc(void *ptr, size_t size)
     //t_chunk* availChunk;
     void* data;
 
-    context = getContext();
     if (!ptr)
         return NULL;
+    context = getContext();
     largeChunk = NULL;
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
     if (chunk->zoneType == zone_large)
     {
         largeChunk = expandLargeChunk(context, largeChunk, size);
         if (!largeChunk)
+        {
+            releaseContext(context);
             return NULL;
+        }
+        releaseContext(context);
         return SKIP_STRUCT(largeChunk, t_large_chunk, 1);
     }
     if (chunk->size - sizeof(t_chunk) >= size)
     {
         context->memoryUsed += size - chunk->used;
         chunk->used = size;
+        releaseContext(context);
         return ptr;
     }
     context->memoryUsed -= chunk->used;
     if (enlargeChunk(context, chunk, size))
     {
         context->memoryUsed += chunk->used;
+        releaseContext(context);
         return chunk->data;
     }
     // availChunk = findFreeChunk(context, chunk->zoneType, ALIGN_UP(size + sizeof(size_t), 8));
@@ -100,9 +114,10 @@ void *realloc(void *ptr, size_t size)
     data = malloc(size);
     if (!data)
         return NULL;
-    context = getContext();
+    getContext();
     ft_memmove(data, chunk->data, chunk->used);
-    freeChunk(context, chunk);
+    releaseContext(context);
+    free(chunk->data);
     return data;
 }
 

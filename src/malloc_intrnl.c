@@ -21,7 +21,7 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
     );
     if (mapped == (void*)-1)
     {
-        ft_printf("mmap failed %i - %s\n", errno, strerror(errno));
+        //ft_printf("mmap failed %i - %s\n", errno, strerror(errno));
         return 0;
     }
     context->memoryMapped += size;
@@ -75,7 +75,7 @@ t_large_chunk* expandLargeChunk(t_context* context, t_large_chunk* largeChunk, s
         return largeChunk;
     }
     mapSize = ALIGN_UP(size, 8) + sizeof(t_large_chunk);
-    mappedChunk = mapLargeChunk(context, size);
+    mappedChunk = mapLargeChunk(context, mapSize);
     if (!mappedChunk)
         return NULL;
     context->memoryUsed += size - largeChunk->used;
@@ -109,10 +109,13 @@ void unmapEmptyZone(t_context* context, t_chunk* chunk)
 
 t_context* getContext()
 {
-    static t_context context = {};
+    static t_context context = { 0 };
 
     if (!context.mtxInit)
+    {
         pthread_mutex_init(&context.mtx, NULL);
+        context.mtxInit = 1;
+    }
     pthread_mutex_lock(&context.mtx);
     return &context;
 }

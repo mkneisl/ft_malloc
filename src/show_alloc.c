@@ -46,6 +46,7 @@ void show_alloc_mem()
         print_allocation,
         print_large_allocation
     };
+    releaseContext(context);
 
     loopZones(context, &callbacks);
     ft_printf("Total : %i bytes\n", context->memoryUsed);

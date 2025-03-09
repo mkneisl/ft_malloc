@@ -17,7 +17,7 @@ t_zone* chunkGetZone(t_context* context, t_chunk* chunk)
     return NULL;
 }
 
-t_chunk* setupFreeChunk(t_context* context, char* addr, t_zone_type type, size_t size)
+t_chunk* setupFreeChunk(t_context* context, void* addr, t_zone_type type, size_t size)
 {
     t_chunk* chunk;
 
@@ -80,7 +80,9 @@ t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size)
     chunk->inUse = 1;
     chunk->used = size; 
     size = ALIGN_UP(size, 8) + sizeof(t_chunk) - LINK_SIZE;
-    if (freeChunk->size - size < sizeof(t_chunk))
+    if (size < sizeof(t_chunk) + sizeof(int))
+        size = ALIGN_UP(sizeof(t_chunk) + sizeof(int), 8);
+    if (freeChunk->size - size < ALIGN_UP(sizeof(t_chunk) + sizeof(int), 8))
     {
         chunk->size = freeChunk->size; 
         NEXT_CHUNK(chunk)->prevInUse = 1;
