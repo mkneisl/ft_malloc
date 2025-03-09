@@ -1,10 +1,10 @@
 #include "malloc_intrnl.h"
 
-static void print_large_allocation(t_large_chunk* largeChunk)
+static void print_large_allocation(t_lrg_chunk* largeChunk)
 {
     char* data;
     
-    data = (char*)SKIP_STRUCT(largeChunk, t_large_chunk, 1);
+    data = (char*)SKIP_STRUCT(largeChunk, t_lrg_chunk, 1);
     ft_printf("%p - %p : %i bytes\n", 
         data, 
         data + largeChunk->used, 
@@ -49,5 +49,5 @@ void show_alloc_mem()
     releaseContext(context);
 
     loopZones(context, &callbacks);
-    ft_printf("Total : %i bytes\n", context->memoryUsed);
+    ft_printf("Total : %i bytes\n", context->stats.memoryUsed);
 }

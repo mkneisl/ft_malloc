@@ -98,8 +98,8 @@ t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size)
         leftOverChunk->prevInUse = 1;
         chunk->size = size; 
     }
-    context->allocationCount++;
-    context->memoryUsed += chunk->used;
+    context->stats.allocationCount++;
+    context->stats.memoryUsed += chunk->used;
     return chunk;
 }
 
@@ -110,12 +110,13 @@ t_chunk* enlargeChunk(t_context* context, t_chunk* chunk, size_t size)
 
     nextChunk = NEXT_CHUNK(chunk);
     if (nextChunk->inUse 
-        || nextChunk->size > size - chunk->used)
+        || nextChunk->size < size - chunk->used)
         return NULL;
     LIST_UNLINK(nextChunk, context->zoneChunks[nextChunk->zoneType])
+    context->stats.memoryUsed += (size - chunk->used);
     chunk->used = size;
     size = ALIGN_UP(size, 8) + sizeof(t_chunk) - LINK_SIZE;
-    if (nextChunk->size - (size - chunk->size) < sizeof(t_chunk))
+    if (nextChunk->size - (size - chunk->size) < ALIGN_UP(sizeof(t_chunk) + 4, 8))
     {
         chunk->size += nextChunk->size;
         NEXT_CHUNK(chunk)->inUse = 1;
@@ -136,8 +137,8 @@ t_chunk* enlargeChunk(t_context* context, t_chunk* chunk, size_t size)
 
 void freeChunk(t_context* context, t_chunk* chunk)
 {
-    context->allocationCount--;
-    context->memoryUsed -= chunk->used;
+    context->stats.allocationCount--;
+    context->stats.memoryUsed -= chunk->used;
     chunk->inUse = 0;
     chunk->used = 0;
     NEXT_CHUNK(chunk)->prevInUse = 0;

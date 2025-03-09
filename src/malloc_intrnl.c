@@ -19,13 +19,10 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
         MAP_ANONYMOUS | MAP_PRIVATE | MAP_NORESERVE, 
         -1, 0
     );
+    context->stats.mmapCallC++;
     if (mapped == (void*)-1)
-    {
-        //ft_printf("mmap failed %i - %s\n", errno, strerror(errno));
         return 0;
-    }
-    context->memoryMapped += size;
-    //ft_printf("mmap %p - %p 0x%lx\n", mapped, (char*)mapped + size, size);
+    context->stats.memoryMapped += size;
     zone = (t_zone*)mapped;
     ft_bzero(zone, sizeof(t_zone));
     zone->context = context;
@@ -38,13 +35,14 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
 void unmapZone(t_context* context, t_zone* zone)
 {
     LIST_UNLINK(zone, context->zones[zone->type])
-    context->memoryMapped -= zone->size;
+    context->stats.memoryMapped -= zone->size;
     munmap(zone, zone->size);
+    context->stats.munmapCallC++;
 }
 
-t_large_chunk* mapLargeChunk(t_context* context, size_t size)
+t_lrg_chunk* mapLargeChunk(t_context* context, size_t size)
 {
-    t_large_chunk* largeChunk;
+    t_lrg_chunk* largeChunk;
     t_zone* zone;
     size_t allocSize;
 
@@ -56,38 +54,38 @@ t_large_chunk* mapLargeChunk(t_context* context, size_t size)
     {
         return NULL;
     }
-    largeChunk = (t_large_chunk*)SKIP_STRUCT(zone, t_zone, 1);
+    largeChunk = (t_lrg_chunk*)SKIP_STRUCT(zone, t_zone, 1);
     largeChunk->zoneType = zone->type;
     largeChunk->used = allocSize;
     largeChunk->size = size;
     return largeChunk;
 }
 
-t_large_chunk* expandLargeChunk(t_context* context, t_large_chunk* largeChunk, size_t size)
+t_lrg_chunk* expandLargeChunk(t_context* context, t_lrg_chunk* largeChunk, size_t size)
 {
     size_t mapSize;
-    t_large_chunk* mappedChunk;
+    t_lrg_chunk* mappedChunk;
 
-    if (largeChunk->size - sizeof(t_large_chunk) >= size)
+    if (largeChunk->size - sizeof(t_lrg_chunk) >= size)
     {
-        context->memoryUsed += size - largeChunk->used;
+        context->stats.memoryUsed += size - largeChunk->used;
         largeChunk->used = size;
         return largeChunk;
     }
-    mapSize = ALIGN_UP(size, 8) + sizeof(t_large_chunk);
+    mapSize = ALIGN_UP(size, 8) + sizeof(t_lrg_chunk);
     mappedChunk = mapLargeChunk(context, mapSize);
     if (!mappedChunk)
         return NULL;
-    context->memoryUsed += size - largeChunk->used;
+    context->stats.memoryUsed += size - largeChunk->used;
     ft_memmove(
-        SKIP_STRUCT(mappedChunk, t_large_chunk, 1),
-        SKIP_STRUCT(largeChunk, t_large_chunk, 1),
+        SKIP_STRUCT(mappedChunk, t_lrg_chunk, 1),
+        SKIP_STRUCT(largeChunk, t_lrg_chunk, 1),
         largeChunk->used);
     unmapLargeChunk(context, largeChunk);
     return mappedChunk;
 }
 
-void unmapLargeChunk(t_context* context, t_large_chunk* mappedChunk)
+void unmapLargeChunk(t_context* context, t_lrg_chunk* mappedChunk)
 {
     unmapZone(context, SKIP_STRUCT(mappedChunk, t_zone, -1));
 }
@@ -102,8 +100,10 @@ void unmapEmptyZone(t_context* context, t_chunk* chunk)
         return;
     if (NEXT_CHUNK(chunk)->zoneType != zone_boundary)
        return;
-    LIST_UNLINK(chunk, context->zoneChunks[chunk->zoneType])
     zone = (t_zone*)SKIP_STRUCT(prevChunk, t_zone, -1);
+    if (!zone->next && !zone->prev)
+        return;
+    LIST_UNLINK(chunk, context->zoneChunks[chunk->zoneType])
     unmapZone(context, zone);   
 }
 

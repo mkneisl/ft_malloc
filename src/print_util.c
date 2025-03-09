@@ -41,7 +41,7 @@ void loopAllocations(t_zone* zone, t_callbacks* callbacks)
 void loopZones(t_context* context, t_callbacks* callbacks)
 {
     t_zone* zone;
-    t_large_chunk* largeChunk;
+    t_lrg_chunk* largeChunk;
     t_zone_type zoneType = zone_tiny;
 
     while (zoneType <= zone_large)
@@ -52,7 +52,7 @@ void loopZones(t_context* context, t_callbacks* callbacks)
             callbacks->print_zone(zone);
             if (zone->type == zone_large)
             {
-                largeChunk = (t_large_chunk*)SKIP_STRUCT(zone, t_zone, 1);
+                largeChunk = (t_lrg_chunk*)SKIP_STRUCT(zone, t_zone, 1);
                 callbacks->print_large_alloc(largeChunk);
             }
             else

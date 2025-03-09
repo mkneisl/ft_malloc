@@ -5,18 +5,19 @@ void free(void *ptr)
 {
     t_context* context;
     t_chunk* chunk;
-    t_large_chunk* largeChunk;
+    t_lrg_chunk* largeChunk;
 
     if (!ptr)
         return;
     context = getContext();
+    context->stats.freeCallC++;
     largeChunk = NULL;
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
     if (chunk->zoneType == zone_large)
     {
-        largeChunk = (t_large_chunk*)SKIP_STRUCT(ptr, t_large_chunk, -1);
-        context->allocationCount--;
-        context->memoryUsed -= largeChunk->used;
+        largeChunk = (t_lrg_chunk*)SKIP_STRUCT(ptr, t_lrg_chunk, -1);
+        context->stats.allocationCount--;
+        context->stats.memoryUsed -= largeChunk->used;
         unmapLargeChunk(context, largeChunk);
         releaseContext(context);
         return;
@@ -32,9 +33,12 @@ void *malloc(size_t size)
     t_context* context;
     t_zone_type zoneType;
     t_chunk* availChunk;
-    t_large_chunk* largeChunk;
+    t_lrg_chunk* largeChunk;
 
+    if (!size)
+        return NULL;
     context = getContext();
+    context->stats.mallocCallC++;
     availChunk = NULL;
     if (size > MAX_SMALL_ALLOC)
     {
@@ -44,10 +48,10 @@ void *malloc(size_t size)
             releaseContext(context);
             return NULL;
         }
-        context->allocationCount++;
-        context->memoryUsed += size;
+        context->stats.allocationCount++;
+        context->stats.memoryUsed += size;
         releaseContext(context);
-        return SKIP_STRUCT(largeChunk, t_large_chunk, 1);
+        return SKIP_STRUCT(largeChunk, t_lrg_chunk, 1);
     }
     zoneType = size <= MAX_TINY_ALLOC ? zone_tiny : zone_small;
     availChunk = findFreeChunk(context, zoneType, ALIGN_UP(size + sizeof(size_t), 8));
@@ -68,13 +72,13 @@ void *realloc(void *ptr, size_t size)
 {
     t_context* context;
     t_chunk* chunk;
-    t_large_chunk* largeChunk;
-    //t_chunk* availChunk;
+    t_lrg_chunk* largeChunk;
     void* data;
 
     if (!ptr)
         return NULL;
     context = getContext();
+    context->stats.reallocCallC++;
     largeChunk = NULL;
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
     if (chunk->zoneType == zone_large)
@@ -86,30 +90,20 @@ void *realloc(void *ptr, size_t size)
             return NULL;
         }
         releaseContext(context);
-        return SKIP_STRUCT(largeChunk, t_large_chunk, 1);
+        return SKIP_STRUCT(largeChunk, t_lrg_chunk, 1);
     }
     if (chunk->size - sizeof(t_chunk) >= size)
     {
-        context->memoryUsed += size - chunk->used;
+        context->stats.memoryUsed += size - chunk->used;
         chunk->used = size;
         releaseContext(context);
         return ptr;
     }
-    context->memoryUsed -= chunk->used;
     if (enlargeChunk(context, chunk, size))
     {
-        context->memoryUsed += chunk->used;
         releaseContext(context);
         return chunk->data;
     }
-    // availChunk = findFreeChunk(context, chunk->zoneType, ALIGN_UP(size + sizeof(size_t), 8));
-    // if (!availChunk)
-    // {
-    //     if (!(availChunk = mapChunk(context, chunk->zoneType)))
-    //         return NULL;
-    // }
-    // ft_memmove(availChunk->data, chunk->data, chunk->used);
-    // freeChunk(context, chunk);
     releaseContext(context);
     data = malloc(size);
     if (!data)

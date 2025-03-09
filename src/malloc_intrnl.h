@@ -65,61 +65,71 @@ typedef struct s_chunk
     };
 }t_chunk;
 
-typedef struct s_large_chunk
+typedef struct s_lrg_chunk
 {
-    size_t size;
-    size_t used : 62;
+    size_t      size;
+    size_t      used : 62;
     t_zone_type zoneType : 2;
-}t_large_chunk;
+}t_lrg_chunk;
 
 typedef struct s_zone
 {
-    t_context* context;
-    struct s_zone* next;
-    struct s_zone* prev;
-    size_t size : 62;
-    t_zone_type type : 2;
+    t_context*      context;
+    struct s_zone*  next;
+    struct s_zone*  prev;
+    size_t          size : 62;
+    t_zone_type     type : 2;
 }t_zone;
+
+typedef struct s_stats
+{
+    size_t memoryUsed;
+    size_t allocationCount;
+    size_t memoryMapped;
+    size_t mallocCallC;
+    size_t reallocCallC;
+    size_t freeCallC;
+    size_t mmapCallC;
+    size_t munmapCallC;
+}t_stats;
 
 typedef struct s_context
 {
     pthread_mutex_t mtx;
-    char mtxInit;
-    size_t memoryUsed;
-    size_t allocationCount;
-    size_t memoryMapped;
-    t_zone*       zones[3];
-    t_chunk* zoneChunks[3];
+    char            mtxInit;
+    t_stats         stats;
+    t_zone*         zones[3];
+    t_chunk*        zoneChunks[3];
 }t_context;
 
 typedef struct s_callbacks
 {
     void(*print_zone)(t_zone*);
     void(*print_alloc)(t_chunk*);
-    void(*print_large_alloc)(t_large_chunk*);
+    void(*print_large_alloc)(t_lrg_chunk*);
 }t_callbacks;
 
-t_chunk* fuzeNeighbourChunks(t_context* context, t_chunk* chunk);
-t_chunk* findFreeChunk(t_context* context, t_zone_type type, size_t size);
+t_chunk*    fuzeNeighbourChunks(t_context* context, t_chunk* chunk);
+t_chunk*    findFreeChunk(t_context* context, t_zone_type type, size_t size);
 
-t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size);
-t_chunk* enlargeChunk(t_context* context, t_chunk* chunk, size_t size);
-void freeChunk(t_context* context, t_chunk* chunk);
+t_chunk*    allocateChunk(t_context* context, t_chunk* freeChunk, size_t size);
+t_chunk*    enlargeChunk(t_context* context, t_chunk* chunk, size_t size);
+void        freeChunk(t_context* context, t_chunk* chunk);
 
-t_chunk* setupFreeChunk(t_context* context, void* addr, t_zone_type type, size_t size);
-t_chunk* mapChunk(t_context* context, t_zone_type type);
+t_chunk*    setupFreeChunk(t_context* context, void* addr, t_zone_type type, size_t size);
+t_chunk*    mapChunk(t_context* context, t_zone_type type);
 
-t_zone* mapZone(t_context* context, t_zone_type type, size_t size);
-void unmapZone(t_context* context, t_zone* zone);
-void unmapEmptyZone(t_context* context, t_chunk* chunk);
+t_zone*     mapZone(t_context* context, t_zone_type type, size_t size);
+void        unmapZone(t_context* context, t_zone* zone);
+void        unmapEmptyZone(t_context* context, t_chunk* chunk);
 
-t_large_chunk* mapLargeChunk(t_context* context, size_t size);
-void unmapLargeChunk(t_context* context, t_large_chunk* mappedChunk);
-t_large_chunk* expandLargeChunk(t_context* context, t_large_chunk* largeChunk, size_t size);
+t_lrg_chunk* mapLargeChunk(t_context* context, size_t size);
+void        unmapLargeChunk(t_context* context, t_lrg_chunk* mappedChunk);
+t_lrg_chunk* expandLargeChunk(t_context* context, t_lrg_chunk* largeChunk, size_t size);
 
-void loopZones(t_context* context, t_callbacks* callbacks);
+void        loopZones(t_context* context, t_callbacks* callbacks);
 
-t_context* getContext();
-void releaseContext(t_context* context);
+t_context*  getContext();
+void        releaseContext(t_context* context);
 
 #endif

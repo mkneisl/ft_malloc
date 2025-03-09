@@ -1,10 +1,10 @@
 #include "malloc_intrnl.h"
 
-static void print_large_allocation_ex(t_large_chunk* largeChunk)
+static void print_large_allocation_ex(t_lrg_chunk* largeChunk)
 {
     char* data;
     
-    data = (char*)SKIP_STRUCT(largeChunk, t_large_chunk, 1);
+    data = (char*)SKIP_STRUCT(largeChunk, t_lrg_chunk, 1);
     ft_printf("%p - %p : 0x%x bytes (0x%x used)\n", 
         data, 
         data + largeChunk->used, 
@@ -51,9 +51,16 @@ void show_alloc_mem_ex()
         print_allocation_ex,
         print_large_allocation_ex
     };
+    t_stats stats = context->stats;
     releaseContext(context);
+
     loopZones(context, &callbacks);
-    ft_printf("Total Memory Used : %x bytes\n", context->memoryUsed);
-    ft_printf("Total Memory Mapped : %x bytes (%i pages)\n", context->memoryMapped, context->memoryMapped / getpagesize());
-    ft_printf("Total Allocations : %i\n", context->allocationCount);
+    ft_printf("Total Memory Used : 0x%x bytes\n", stats.memoryUsed);
+    ft_printf("Total Memory Mapped : 0x%x bytes (%x pages)\n", stats.memoryMapped, stats.memoryMapped / getpagesize());
+    ft_printf("Total Allocations : %i\n", stats.allocationCount);
+    ft_printf("Total Malloc calls : %i\n", stats.mallocCallC);
+    ft_printf("Total Realloc calls : %i\n", stats.reallocCallC);
+    ft_printf("Total Free calls : %i\n", stats.freeCallC);
+    ft_printf("Total mmap calls : %i\n", stats.mmapCallC);
+    ft_printf("Total mumap calls : %i\n", stats.munmapCallC);
 }
