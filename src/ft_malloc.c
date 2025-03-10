@@ -1,5 +1,4 @@
 #include "malloc_intrnl.h"
-#include "stdio.h"
 
 void free(void *ptr)
 {

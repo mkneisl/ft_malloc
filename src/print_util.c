@@ -1,5 +1,4 @@
 #include "malloc_intrnl.h"
-#include <stdio.h>
 
 t_zone* findNextHigherZone(t_zone* list, t_zone* prevZone)
 {
