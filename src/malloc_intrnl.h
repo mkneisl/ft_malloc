@@ -38,6 +38,11 @@
 # define TINY_ZONE_SIZE ALIGN_UP(MAX_TINY_ALLOC * 100, getpagesize()) 
 # define SMALL_ZONE_SIZE ALIGN_UP(MAX_SMALL_ALLOC * 100, getpagesize())
 
+# define M_MODE_CLEAN 1
+# define M_MODE_PERFORMANCE 2
+# define M_MODE_ABRT 4
+# define M_MODE_CPERFORMANCE M_MODE_PERFORMANCE | M_MODE_CLEAN
+
 typedef struct s_context t_context;
 
 typedef enum e_zone_type
@@ -96,7 +101,8 @@ typedef struct s_stats
 typedef struct s_context
 {
     pthread_mutex_t mtx;
-    char            mtxInit;
+    char            mtxInit : 4;
+    char            mode : 4;
     t_stats         stats;
     t_zone*         zones[3];
     t_chunk*        zoneChunks[3];

@@ -6,10 +6,14 @@ void free(void *ptr)
     t_context* context;
     t_chunk* chunk;
     t_lrg_chunk* largeChunk;
-
     if (!ptr)
         return;
     context = getContext();
+    if (context->mode & M_MODE_ABRT && (uint64_t)ptr % 8)
+    {
+        ft_putstr_fd("free(): invalid pointer\n", 0);
+        abort();
+    }
     context->stats.freeCallC++;
     largeChunk = NULL;
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
@@ -78,11 +82,17 @@ void *realloc(void *ptr, size_t size)
     if (!ptr)
         return NULL;
     context = getContext();
+    if (context->mode & M_MODE_ABRT && (uint64_t)ptr % 8)
+    {
+        ft_putstr_fd("realloc(): invalid pointer\n", 0);
+        abort();
+    }
     context->stats.reallocCallC++;
     largeChunk = NULL;
     chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
     if (chunk->zoneType == zone_large)
     {
+        largeChunk = (t_lrg_chunk*)SKIP_STRUCT(ptr, t_lrg_chunk, -1);
         largeChunk = expandLargeChunk(context, largeChunk, size);
         if (!largeChunk)
         {

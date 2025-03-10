@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <stdlib.h>
 
 t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
 {
@@ -101,10 +102,36 @@ void unmapEmptyZone(t_context* context, t_chunk* chunk)
     if (NEXT_CHUNK(chunk)->zoneType != zone_boundary)
        return;
     zone = (t_zone*)SKIP_STRUCT(prevChunk, t_zone, -1);
-    if (!zone->next && !zone->prev)
+    if (context->mode & M_MODE_PERFORMANCE 
+        && (!zone->next && !zone->prev))
         return;
     LIST_UNLINK(chunk, context->zoneChunks[chunk->zoneType])
     unmapZone(context, zone);   
+}
+
+void exitHandler()
+{
+    t_zone* zone;
+    t_zone_type zoneType = zone_tiny;
+    t_context* context = getContext();
+
+    while (zoneType <= zone_large)
+    {
+        zone = context->zones[zoneType];
+        while (zone)
+        {
+            if (zone->next)
+            {
+                zone = zone->next;
+                unmapZone(context, zone->prev);
+                continue;
+            }
+            unmapZone(context, zone);
+            break;
+        }
+        zoneType++;
+    }
+    releaseContext(context);
 }
 
 t_context* getContext()
@@ -115,6 +142,9 @@ t_context* getContext()
     {
         pthread_mutex_init(&context.mtx, NULL);
         context.mtxInit = 1;
+        context.mode = M_MODE_CLEAN | M_MODE_PERFORMANCE | M_MODE_ABRT;
+        if (context.mode & M_MODE_CLEAN)
+            atexit(exitHandler);
     }
     pthread_mutex_lock(&context.mtx);
     return &context;
