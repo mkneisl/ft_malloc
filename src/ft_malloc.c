@@ -8,10 +8,13 @@ void free(void *ptr)
     if (!ptr)
         return;
     context = getContext();
-    if (context->mode & M_MODE_ABRT && (uint64_t)ptr % 8)
+    if ((uint64_t)ptr % 8)
     {
         ft_putstr_fd("free(): invalid pointer\n", 0);
-        abort();
+        if (context->mode & M_MODE_ABRT)
+            abort();
+        releaseContext(context);
+        return;
     }
     context->stats.freeCallC++;
     largeChunk = NULL;
@@ -81,10 +84,13 @@ void *realloc(void *ptr, size_t size)
     if (!ptr)
         return NULL;
     context = getContext();
-    if (context->mode & M_MODE_ABRT && (uint64_t)ptr % 8)
+    if ((uint64_t)ptr % 8)
     {
         ft_putstr_fd("realloc(): invalid pointer\n", 0);
-        abort();
+        if (context->mode & M_MODE_ABRT)
+            abort();
+        releaseContext(context);
+        return NULL;
     }
     context->stats.reallocCallC++;
     largeChunk = NULL;
