@@ -45,15 +45,16 @@ static void print_zone_ex(t_zone* zone)
 
 void show_alloc_mem_ex()
 { 
+    t_stats stats;
     t_context* context = getContext();
     t_callbacks callbacks = {
         print_zone_ex,
         print_allocation_ex,
         print_large_allocation_ex
     };
-    t_stats stats = context->stats;
-    releaseContext(context);
 
+    stats = context->stats;
+    releaseContext(context);
     loopZones(context, &callbacks);
     ft_printf("Total Memory Used : 0x%x bytes\n", stats.memoryUsed);
     ft_printf("Total Memory Mapped : 0x%x bytes (%x pages)\n", stats.memoryMapped, stats.memoryMapped / getpagesize());

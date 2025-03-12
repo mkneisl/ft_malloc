@@ -27,12 +27,12 @@ $(BIN)/%.o: ./src/%.c
 	cc -c $< $(CFLAGS) -o $@
 
 $(LINK_NAME): $(OBJ_FILES) $(LIBFT)
-	cc  -fPIC -shared $(OBJ_FILES) $(LIBFT)  -o ./$(BIN)/$(NAME)
+	cc  -fPIC -shared $(OBJ_FILES) $(LIBFT) -o ./$(BIN)/$(NAME)
 	ln -f -s ./$(BIN)/$(NAME) $(LINK_NAME)
 	cc $(CFLAGS) ./tests/main.c -L. -lft_malloc -o a.out
 
 $(LIBFT):
-	make -C ./ft_printf/ 
+	make -C ./ft_printf/
 
 clean:
 	rm -f $(OBJ_FILES)

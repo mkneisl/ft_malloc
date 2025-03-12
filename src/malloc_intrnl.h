@@ -128,6 +128,7 @@ t_chunk*    mapChunk(t_context* context, t_zone_type type);
 t_zone*     mapZone(t_context* context, t_zone_type type, size_t size);
 void        unmapZone(t_context* context, t_zone* zone);
 void        unmapEmptyZone(t_context* context, t_chunk* chunk);
+char        ptrInMappedZone(t_context* context, void* ptr);
 
 t_lrg_chunk* mapLargeChunk(t_context* context, size_t size);
 void        unmapLargeChunk(t_context* context, t_lrg_chunk* mappedChunk);

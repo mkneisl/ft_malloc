@@ -54,3 +54,23 @@ void unmapEmptyZone(t_context* context, t_chunk* chunk)
     LIST_UNLINK(chunk, context->zoneChunks[chunk->zoneType])
     unmapZone(context, zone);   
 }
+
+char ptrInMappedZone(t_context* context, void* ptr)
+{
+    t_zone* zone;
+    t_zone_type zoneType = zone_tiny;
+
+    while (zoneType <= zone_large)
+    {
+        zone = context->zones[zoneType];
+        while (zone)
+        {
+            if (ptr > (void*)zone
+                && ptr < (void*)(zone + zone->size))
+                return 1;
+            zone = zone->next;
+        }
+        zoneType++;
+    }
+    return 0;
+}
