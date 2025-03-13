@@ -22,6 +22,7 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
     context->stats.memoryMapped += size;
     zone = (t_zone*)mapped;
     ft_bzero(zone, sizeof(t_zone));
+    zone->magic = ZONE_MAGIC;
     zone->context = context;
     zone->size = size;
     zone->type = type;
@@ -48,6 +49,8 @@ void unmapEmptyZone(t_context* context, t_chunk* chunk)
     if (NEXT_CHUNK(chunk)->zoneType != zone_boundary)
        return;
     zone = (t_zone*)SKIP_STRUCT(prevChunk, t_zone, -1);
+    if (zone->magic != ZONE_MAGIC)
+        return;
     if (context->mode & M_MODE_PERFORMANCE 
         && (!zone->next && !zone->prev))
         return;

@@ -43,6 +43,8 @@
 # define M_MODE_ABRT 4
 # define M_MODE_CPERFORMANCE M_MODE_PERFORMANCE | M_MODE_CLEAN
 
+# define ZONE_MAGIC 0xF424342F
+
 typedef struct s_context t_context;
 
 typedef enum e_zone_type
@@ -79,6 +81,7 @@ typedef struct s_lrg_chunk
 
 typedef struct s_zone
 {
+    uint64_t        magic;
     t_context*      context;
     struct s_zone*  next;
     struct s_zone*  prev;

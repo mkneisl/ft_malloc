@@ -11,7 +11,7 @@ void free(void *ptr)
     context = getContext();
     if (!ptrInMappedZone(context, ptr))
     {
-        //ft_putstr_fd("free(): ptr not mine!\n", 1);
+        ft_putstr_fd("free(): ptr not mine!\n", 1);
         releaseContext(context);
         return;
     }
@@ -39,6 +39,18 @@ void free(void *ptr)
     chunk = fuzeNeighbourChunks(context, chunk);
     unmapEmptyZone(context, chunk);
     releaseContext(context);
+    return; 
+}
+
+void *calloc(size_t nelem, size_t elsize)
+{
+    void* ptr;
+
+    ptr = malloc(nelem * elsize);
+    if (!ptr)
+       return NULL;
+    ft_bzero(ptr, nelem * elsize);
+    return ptr;
 }
 
 void *malloc(size_t size)
@@ -93,7 +105,7 @@ void *realloc(void *ptr, size_t size)
     context = getContext();
     if (!ptrInMappedZone(context, ptr))
     {
-        //ft_putstr_fd("realloc(): ptr not mine!\n", 1);
+        ft_putstr_fd("realloc(): ptr not mine!\n", 1);
         releaseContext(context);
         return NULL;
     }
