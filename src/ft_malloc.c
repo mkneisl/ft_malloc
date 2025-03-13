@@ -60,6 +60,7 @@ void *malloc(size_t size)
     t_chunk* availChunk;
     t_lrg_chunk* largeChunk;
 
+    //ft_putstr_fd("malloc\n",1);
     if (!size)
         return NULL;
     context = getContext();
