@@ -31,6 +31,8 @@
                                         node->prev->next = node->next;
 
 # define LINK_SIZE (sizeof(void*) * 2) // Represents the size of next/prev link ptrs
+# define FREE_HDR_SIZE (sizeof(t_chunk) - LINK_SIZE)
+# define MIN_ALLOC_SIZE ALIGN_UP(sizeof(t_chunk) + sizeof(int), 8)
 
 # define MAX_TINY_ALLOC 0x20
 # define MAX_SMALL_ALLOC 0x500

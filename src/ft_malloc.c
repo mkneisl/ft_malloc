@@ -105,13 +105,11 @@ void *realloc(void *ptr, size_t size)
     context = getContext();
     if (!ptrInMappedZone(context, ptr))
     {
-        ft_putstr_fd("realloc(): ptr not mine!\n", 1);
         releaseContext(context);
         return NULL;
     }
     if ((uint64_t)ptr % 8)
     {
-        ft_putstr_fd("realloc(): invalid pointer\n", 1);
         if (context->mode & M_MODE_ABRT)
             abort();
         releaseContext(context);
@@ -139,11 +137,11 @@ void *realloc(void *ptr, size_t size)
         releaseContext(context);
         return ptr;
     }
-    // if (enlargeChunk(context, chunk, size))
-    // {
-    //     releaseContext(context);
-    //     return chunk->data;
-    // }
+    if (enlargeChunk(context, chunk, size))
+    {
+        releaseContext(context);
+        return chunk->data;
+    }
     releaseContext(context);
     data = malloc(size);
     if (!data)
