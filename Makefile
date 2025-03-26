@@ -24,24 +24,24 @@ all: $(LINK_NAME)
 
 $(BIN)/%.o: ./src/%.c
 	$(DIR_GUARD)
-	cc -c $< $(CFLAGS) -o $@
+	gcc -c $< $(CFLAGS) -Ilibft/include -o $@
 
 $(LINK_NAME): $(OBJ_FILES) $(LIBFT)
-	cc  -fPIC -shared $(OBJ_FILES) $(LIBFT) -o ./$(BIN)/$(NAME)
+	gcc -fPIC -shared $(CFLAGS) $(OBJ_FILES) $(LIBFT) -o ./$(BIN)/$(NAME)
 	ln -f -s ./$(BIN)/$(NAME) $(LINK_NAME)
-	cc $(CFLAGS) ./tests/main.c -L. -lft_malloc -o a.out
+	cc $(CFLAGS) ./tests/main.c -L. -Ilibft/include -lft_malloc -o a.out
 
 $(LIBFT):
-	make -C ./ft_printf/
+	make -C ./libft/
 
 clean:
 	rm -f $(OBJ_FILES)
-	make -C ./ft_printf/ clean
+	make -C ./libft/ clean
 
 fclean:
 	rm -f $(NAME)
 	rm -f $(LINK_NAME)
 	rm -rf $(BIN)
-	make -C ./ft_printf/ fclean
+	make -C ./libft/ fclean
 
 re: fclean $(LINK_NAME)

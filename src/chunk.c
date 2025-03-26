@@ -79,7 +79,7 @@ t_chunk* allocateChunk(t_context* context, t_chunk* freeChunk, size_t size)
     LIST_UNLINK(freeChunk, context->zoneChunks[freeChunk->zoneType])
     chunk->inUse = 1;
     chunk->used = size; 
-    size = ALIGN_UP(size, 8) + FREE_HDR_SIZE;
+    size = ALIGN_UP(size + ALLOCD_HDR_SIZE, 16);
     if (size < MIN_ALLOC_SIZE)
         size = MIN_ALLOC_SIZE;
     if (freeChunk->size - size < MIN_ALLOC_SIZE)
@@ -110,13 +110,13 @@ t_chunk* enlargeChunk(t_context* context, t_chunk* chunk, size_t size)
 
     nextChunk = NEXT_CHUNK(chunk);
     if (nextChunk->inUse 
-        || nextChunk->size + chunk->size - FREE_HDR_SIZE < size
+        || nextChunk->size + chunk->size - ALLOCD_HDR_SIZE < size
         || nextChunk->zoneType == zone_boundary)
         return NULL;
     LIST_UNLINK(nextChunk, context->zoneChunks[nextChunk->zoneType])
     context->stats.memoryUsed += (size - chunk->used);
     chunk->used = size;
-    size = ALIGN_UP(size, 8) + FREE_HDR_SIZE;
+    size = ALIGN_UP(size + ALLOCD_HDR_SIZE, 16);
     if (nextChunk->size - (size - chunk->size) < MIN_ALLOC_SIZE)
     {
         chunk->size += nextChunk->size;

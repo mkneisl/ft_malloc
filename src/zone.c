@@ -13,7 +13,7 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
     mapped = mmap(NULL,
         size, 
         PROT_READ | PROT_WRITE, 
-        MAP_ANONYMOUS | MAP_PRIVATE | MAP_NORESERVE, 
+        MAP_ANONYMOUS | MAP_PRIVATE, 
         -1, 0
     );
     context->stats.mmapCallC++;
@@ -23,7 +23,6 @@ t_zone* mapZone(t_context* context, t_zone_type type, size_t size)
     zone = (t_zone*)mapped;
     ft_bzero(zone, sizeof(t_zone));
     zone->magic = ZONE_MAGIC;
-    zone->context = context;
     zone->size = size;
     zone->type = type;
     LIST_LINK(zone, context->zones[zone->type])
@@ -69,7 +68,7 @@ char ptrInMappedZone(t_context* context, void* ptr)
         while (zone)
         {
             if (ptr > (void*)zone
-                && ptr < (void*)(zone + zone->size))
+                && ptr < (void*)((char*)zone + zone->size))
                 return 1;
             zone = zone->next;
         }

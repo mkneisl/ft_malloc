@@ -11,7 +11,6 @@ void free(void *ptr)
     context = getContext();
     if (!ptrInMappedZone(context, ptr))
     {
-        ft_putstr_fd("free(): ptr not mine!\n", 1);
         releaseContext(context);
         return;
     }
@@ -51,6 +50,21 @@ void *calloc(size_t nelem, size_t elsize)
        return NULL;
     ft_bzero(ptr, nelem * elsize);
     return ptr;
+}
+
+size_t malloc_size(const void* ptr)
+{
+    t_lrg_chunk* largeChunk;
+    t_chunk* chunk;
+   
+    largeChunk = NULL;
+    chunk = (t_chunk*)SKIP_STRUCT(ptr, size_t, -1);
+    if (chunk->zoneType == zone_large)
+    {
+        largeChunk = (t_lrg_chunk*)SKIP_STRUCT(ptr, t_lrg_chunk, -1);
+        return largeChunk->used;
+    }
+    return chunk->used;
 }
 
 void *malloc(size_t size)
@@ -102,6 +116,8 @@ void *realloc(void *ptr, size_t size)
 
     if (!ptr)
         return malloc(size);
+    if (!size)
+        return free(ptr), NULL;
     context = getContext();
     if (!ptrInMappedZone(context, ptr))
     {

@@ -1,29 +1,55 @@
 #include "stdio.h"
 #include <unistd.h>
 #include "../include/ft_malloc.h"
-#include "../libft/libft.h"
-#include "../ft_printf/ft_printf.h"
-
-void *mcalloc(size_t size)
-{
-    void* ptr = malloc(size);
-    for (size_t i = 0; i < size; i++)
-    {
-        ((char*)ptr)[i] = 0;
-    }
-    return ptr;
-}
+#include "libft.h"
+#include <time.h>
+#include <stdlib.h>
 
 char* bee(char* ee)
 {
 return ee +5;
 }
 
+void memIntegrityTest()
+{
+    void* arr[100000];
+    size_t sizes[100000];
+
+    srand(time(NULL));
+    for (int a =0; a < 100000; a++)
+    {
+        sizes[a] = rand() % 0xFF;
+        arr[a] = malloc(sizes[a]);
+        printf("[%i]Malloced(%li) %p\n",a, sizes[a], arr[a]);
+        for (size_t b =0; b < sizes[a]; b++)
+            ((char*)arr[a])[b] = 0x42;
+    }
+    for (int a =0; a < 1000; a++)
+    {
+        for (size_t b = 0; b < sizes[a]; b++)
+        {
+            if (((char*)arr[a])[b] != 0x42)
+                printf("Error bytes not equal\n");
+        }
+        free(arr[a]);
+    }
+}
+
+
 int main()
 {
     void* ptr[6];
 
     ft_printf("Pagesize: 0x%x\n-----------------\n", getpagesize());
+    ft_printf("Ptr: %p\n", malloc(42));
+    //ft_printf("Ptr: %p\n", malloc(2));
+    //ft_printf("Ptr: %p\n", malloc(13));
+    ft_printf("Ptr: %p\n", malloc(92));
+    ft_printf("Ptr: %p\n", malloc(55));
+    show_alloc_mem_ex();
+    return 0;
+    memIntegrityTest();
+    getchar();
     show_alloc_mem_ex();
     ptr[0] = malloc(0x210);
     ft_bzero(ptr[0], 0x210);
@@ -37,7 +63,7 @@ int main()
     ft_bzero(ptr[4], 0x341);
     show_alloc_mem_ex();
     ft_printf("-----------------\n");
-    free(bee(ptr[1] ));
+    free((ptr[1] ));
     free(ptr[3]);
     show_alloc_mem_ex();
     ft_printf("-----------------\n");

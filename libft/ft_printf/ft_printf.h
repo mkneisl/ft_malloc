@@ -12,7 +12,7 @@
 
 #ifndef FT_PRINTF_H
 # define FT_PRINTF_H
-# include "../libft/libft.h"
+# include "libft.h"
 # include <unistd.h>
 # include <stdarg.h>
 
@@ -33,6 +33,5 @@ char				*process_number_arg(t_prntf_arg cmd, va_list *vlst);
 char				*process_char_arg(t_prntf_arg cmd, va_list *vlst);
 t_prntf_arg			parse_comand(char *command);
 char				*append(char *str, char *to_append);
-int					ft_printf(const char *fmt, ...);
 
 #endif

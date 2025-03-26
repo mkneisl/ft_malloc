@@ -51,7 +51,7 @@ void	ft_putnbr_fd(int n, int fd)
 	while (digitcount > 0)
 	{
 		c = (get_digit(num, digitcount) + 48);
-		write(fd, &c, 1);
+		write(fd, &c, fd);
 		digitcount--;
 	}
 }

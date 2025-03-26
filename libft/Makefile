@@ -6,34 +6,80 @@
 #    By: mkneisl <mkneisl@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/04/02 13:24:54 by mkneisl           #+#    #+#              #
-#    Updated: 2022/05/13 17:07:05 by mkneisl          ###   ########.fr        #
+#    Updated: 2025/03/26 17:34:39 by mkneisl          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = libft.a
-HEADER = libft.h
 
-MDF = ft_putptr_fd.c ft_atoi.c ft_bzero.c ft_calloc.c ft_isalnum.c ft_isalpha.c ft_isascii.c ft_isdigit.c ft_isprint.c ft_itoa.c ft_memchr.c ft_memcmp.c ft_memcpy.c ft_memmove.c ft_memset.c ft_putchar_fd.c ft_putendl_fd.c ft_putnbr_fd.c ft_putstr_fd.c ft_split.c ft_strchr.c ft_strdup.c ft_striteri.c ft_strjoin.c ft_strlcat.c ft_strlcpy.c ft_strlen.c ft_strmapi.c ft_strncmp.c ft_strnstr.c ft_strrchr.c ft_strtrim.c ft_substr.c ft_tolower.c ft_toupper.c
-MDO = ft_putptr_fd.o ft_atoi.o ft_bzero.o ft_calloc.o ft_isalnum.o ft_isalpha.o ft_isascii.o ft_isdigit.o ft_isprint.o ft_itoa.o ft_memchr.o ft_memcmp.o ft_memcpy.o ft_memmove.o ft_memset.o ft_putchar_fd.o ft_putendl_fd.o ft_putnbr_fd.o ft_putstr_fd.o ft_split.o ft_strchr.o ft_strdup.o ft_striteri.o ft_strjoin.o ft_strlcat.o ft_strlcpy.o ft_strlen.o ft_strmapi.o ft_strncmp.o ft_strnstr.o ft_strrchr.o ft_strtrim.o ft_substr.o ft_tolower.o ft_toupper.o
+BIN = bin
+DIR_GUARD=@mkdir -p $(@D)
 
-BPF = ft_lstadd_back.c ft_lstadd_front.c ft_lstclear.c ft_lstdelone.c ft_lstiter.c ft_lstlast.c ft_lstnew.c ft_lstsize.c ft_lstmap.c
-BPO = ft_lstadd_back.o ft_lstadd_front.o ft_lstclear.o ft_lstdelone.o ft_lstiter.o ft_lstlast.o ft_lstnew.o ft_lstsize.o ft_lstmap.o
+CORE_FILES= ft_atoi	\
+			ft_bzero \
+			ft_calloc\
+			ft_isalnum \
+			ft_isalpha \
+			ft_isascii \
+			ft_isdigit \
+			ft_isprint \
+			ft_itoa \
+			ft_memchr \
+			ft_memcmp \
+			ft_memcpy \
+			ft_memmove \
+			ft_memset \
+			ft_putchar_fd \
+			ft_putendl_fd \
+			ft_putnbr_fd \
+			ft_putstr_fd \
+			ft_split \
+			ft_strchr \
+			ft_strdup \
+			ft_striteri \
+			ft_strjoin \
+			ft_strlcat \
+			ft_strlcpy \
+			ft_strlen \
+			ft_strmapi \
+			ft_strncmp \
+			ft_strnstr \
+			ft_strrchr \
+			ft_strtrim \
+			ft_substr \
+			ft_tolower \
+			ft_toupper \
+			ft_lstadd_back \
+			ft_lstadd_front \
+			ft_lstclear \
+			ft_lstdelone \
+			ft_lstiter \
+			ft_lstlast \
+			ft_lstnew \
+			ft_lstsize \
+			ft_lstmap 
 
+FTPRINTF_FILES = 	ft_printf \
+					ft_itoa_sb \
+					ft_itoa_ub \
+					ft_printf_util \
+					ft_printf_parse
+
+OBJ_FILES = $(addprefix $(BIN)/core/, $(addsuffix .o , $(CORE_FILES)))
+OBJ_FILES += $(addprefix $(BIN)/ft_printf/, $(addsuffix .o , $(FTPRINTF_FILES)))
 CFLAGS = -Wall -Wextra -Werror
 
 all: $(NAME)
 
-%.o: %.c $(HEADER)
-	@cc -c $< $(CFLAGS)
+$(BIN)/%.o: ./%.c
+	@$(DIR_GUARD)
+	cc -c $< $(CFLAGS) -Iinclude  -o $@
 
-$(NAME): $(MDO)
-	@ar rc $(NAME) $(MDO)
-
-bonus: $(MDO) $(BPO)
-	@ar rc $(NAME) $(MDO) $(BPO)
+$(NAME): $(OBJ_FILES)
+	ar rc $(NAME) $(OBJ_FILES)
 
 clean:
-	@rm -f $(MDO) $(BPO)
+	@rm -rf $(BIN)
 
 fclean: clean
 	@rm -f $(NAME)

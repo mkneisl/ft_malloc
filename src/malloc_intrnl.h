@@ -2,8 +2,7 @@
 # define MALLOC_INTRNL_H
 # include <stdint.h>
 # include "../include/ft_malloc.h"
-# include "../libft/libft.h"
-# include "../ft_printf/ft_printf.h"
+# include "libft.h"
 # include <pthread.h>
 
 # define ALIGN(val, align) (((uint64_t)val) & ~(align - 1))
@@ -31,8 +30,8 @@
                                         node->prev->next = node->next;
 
 # define LINK_SIZE (sizeof(void*) * 2) // Represents the size of next/prev link ptrs
-# define FREE_HDR_SIZE (sizeof(t_chunk) - LINK_SIZE)
-# define MIN_ALLOC_SIZE ALIGN_UP(sizeof(t_chunk) + sizeof(int), 8)
+# define ALLOCD_HDR_SIZE (sizeof(t_chunk) - LINK_SIZE)
+# define MIN_ALLOC_SIZE ALIGN_UP(sizeof(t_chunk) + sizeof(int), 16)
 
 # define MAX_TINY_ALLOC 0x20
 # define MAX_SMALL_ALLOC 0x500
@@ -84,7 +83,6 @@ typedef struct s_lrg_chunk
 typedef struct s_zone
 {
     uint64_t        magic;
-    t_context*      context;
     struct s_zone*  next;
     struct s_zone*  prev;
     size_t          size : 62;
