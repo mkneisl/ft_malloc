@@ -9,11 +9,13 @@ void free(void *ptr)
     if (!ptr)
         return;
     context = getContext();
+#ifdef __APPLE__
     if (!ptrInMappedZone(context, ptr))
     {
         releaseContext(context);
         return;
     }
+#endif
     if ((uint64_t)ptr % 8)
     {
         ft_putstr_fd("free(): invalid pointer\n", 1);
@@ -119,11 +121,13 @@ void *realloc(void *ptr, size_t size)
     if (!size)
         return free(ptr), NULL;
     context = getContext();
+#ifdef __APPLE__
     if (!ptrInMappedZone(context, ptr))
     {
         releaseContext(context);
         return NULL;
     }
+#endif
     if ((uint64_t)ptr % 8)
     {
         if (context->mode & M_MODE_ABRT)

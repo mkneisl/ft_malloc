@@ -1,11 +1,16 @@
 #include "malloc_intrnl.h"
 
-void exitHandler()
+__attribute__((destructor)) void exitHandler()
 {
     t_zone* zone;
     t_zone_type zoneType = zone_tiny;
     t_context* context = getContext();
 
+    if (!(context->mode & M_MODE_CLEAN))
+    {
+        releaseContext(context);
+        return;
+    }
     while (zoneType <= zone_large)
     {
         zone = context->zones[zoneType];
@@ -45,8 +50,6 @@ t_context* getContext()
         pthread_mutex_init(&context.mtx, NULL);
         context.mtxInit = 1;
         loadEnvOptions(&context);
-        if (context.mode & M_MODE_CLEAN)
-            atexit(exitHandler);
     }
     pthread_mutex_lock(&context.mtx);
     return &context;

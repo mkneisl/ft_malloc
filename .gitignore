@@ -1,5 +1,6 @@
 bin
 a.out
 libft_malloc.so
+libft.a
 .vscode
 *.o

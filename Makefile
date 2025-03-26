@@ -4,7 +4,7 @@ ifeq ($(HOSTTYPE),)
 HOSTTYPE := $(shell uname -m)_$(shell uname -s)
 endif
 
-CFLAGS = -Werror -Wall -Wextra -fPIC -g
+CFLAGS = -Werror -Wall -Wextra -fPIC
 FILE_NAMES = malloc_intrnl \
 			ft_malloc \
 			show_alloc \
@@ -16,29 +16,32 @@ FILE_NAMES = malloc_intrnl \
 OBJ_FILES = $(addprefix $(BIN)/, $(addsuffix .o , $(FILE_NAMES)))
 LIBFT=./libft/libft.a
 
-NAME=libft_malloc_$(HOSTTYPE).so
+NAME=$(BIN)/libft_malloc_$(HOSTTYPE).so
 LINK_NAME=libft_malloc.so
 DIR_GUARD=@mkdir -p $(@D)
 
-all: $(LINK_NAME)
+all: $(NAME)
 
 $(BIN)/%.o: ./src/%.c
 	$(DIR_GUARD)
-	gcc -c $< $(CFLAGS) -Ilibft/include -o $@
+	cc -c $< $(CFLAGS) -Ilibft/include -o $@
 
-$(LINK_NAME): $(OBJ_FILES) $(LIBFT)
-	gcc -fPIC -shared $(CFLAGS) $(OBJ_FILES) $(LIBFT) -o ./$(BIN)/$(NAME)
-	ln -f -s ./$(BIN)/$(NAME) $(LINK_NAME)
-	cc $(CFLAGS) ./tests/main.c -L. -Ilibft/include -lft_malloc -o a.out
+$(NAME): $(OBJ_FILES) $(LIBFT)
+	cc -shared $(CFLAGS) $(OBJ_FILES) $(LIBFT) -o $(NAME)
+	ln -f -s $(NAME) $(LINK_NAME)
+
+malloc-test:
+	cc $(CFLAGS) ./tests/main.c -L. -Ilibft/include -lft_malloc -o $@
 
 $(LIBFT):
 	make -C ./libft/
 
 clean:
+	rm -f malloc-test
 	rm -f $(OBJ_FILES)
 	make -C ./libft/ clean
 
-fclean:
+fclean: clean
 	rm -f $(NAME)
 	rm -f $(LINK_NAME)
 	rm -rf $(BIN)

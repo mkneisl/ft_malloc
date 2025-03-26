@@ -10,29 +10,41 @@ char* bee(char* ee)
 return ee +5;
 }
 
-void memIntegrityTest()
+void memIntegrityTest(unsigned int mCount)
 {
     void* arr[100000];
     size_t sizes[100000];
 
+    if (mCount > 100000)
+        mCount = 100000;
     srand(time(NULL));
-    for (int a =0; a < 100000; a++)
+    for (unsigned int a =0; a < mCount; a++)
     {
-        sizes[a] = rand() % 0xFF;
+        sizes[a] = rand() % 0xFFFF;
         arr[a] = malloc(sizes[a]);
-        printf("[%i]Malloced(%li) %p\n",a, sizes[a], arr[a]);
+        printf("[%i]Malloced(%5li) %p\n", a, sizes[a], arr[a]);
+        if ((uint64_t)arr[a] % 16)
+        {
+            printf("Error malloc not 16 byte aligned\n");
+            return;
+        }
         for (size_t b =0; b < sizes[a]; b++)
             ((char*)arr[a])[b] = 0x42;
     }
-    for (int a =0; a < 1000; a++)
+    for (unsigned int a =0; a < mCount; a++)
     {
         for (size_t b = 0; b < sizes[a]; b++)
         {
             if (((char*)arr[a])[b] != 0x42)
+            {
                 printf("Error bytes not equal\n");
+                return;
+            }
         }
+        //printf("[%i]Freeing %p\n",a,  arr[a]);
         free(arr[a]);
     }
+    printf("Freed ptrs\n");
 }
 
 
@@ -41,15 +53,8 @@ int main()
     void* ptr[6];
 
     ft_printf("Pagesize: 0x%x\n-----------------\n", getpagesize());
-    ft_printf("Ptr: %p\n", malloc(42));
-    //ft_printf("Ptr: %p\n", malloc(2));
-    //ft_printf("Ptr: %p\n", malloc(13));
-    ft_printf("Ptr: %p\n", malloc(92));
-    ft_printf("Ptr: %p\n", malloc(55));
     show_alloc_mem_ex();
-    return 0;
-    memIntegrityTest();
-    getchar();
+    memIntegrityTest(1000);
     show_alloc_mem_ex();
     ptr[0] = malloc(0x210);
     ft_bzero(ptr[0], 0x210);
