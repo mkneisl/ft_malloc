@@ -13,7 +13,11 @@ FILE_NAMES = malloc_intrnl \
 			chunk	\
 			lrg_chunk \
 			zone
+TEST_FILES =	avrgTests \
+				memIntegrity \
+				zoneAllocCount
 OBJ_FILES = $(addprefix $(BIN)/, $(addsuffix .o , $(FILE_NAMES)))
+TESTERS = $(addprefix tests/, $(addsuffix .out , $(TEST_FILES)))
 LIBFT=./libft/libft.a
 
 NAME=$(BIN)/libft_malloc_$(HOSTTYPE).so
@@ -30,8 +34,10 @@ $(NAME): $(OBJ_FILES) $(LIBFT)
 	cc -shared $(CFLAGS) $(OBJ_FILES) $(LIBFT) -o $(NAME)
 	ln -f -s $(NAME) $(LINK_NAME)
 
-malloc-test:
-	cc $(CFLAGS) ./tests/main.c -L. -Ilibft/include -lft_malloc -o $@
+./tests/%.out: ./tests/%.c
+	cc $(CFLAGS) $< -L. -Ilibft/include -Iinclude -lft_malloc -o $@
+
+tests: $(TESTERS)
 
 $(LIBFT):
 	make -C ./libft/
@@ -39,6 +45,7 @@ $(LIBFT):
 clean:
 	rm -f malloc-test
 	rm -f $(OBJ_FILES)
+	rm -f $(TESTERS)
 	make -C ./libft/ clean
 
 fclean: clean
@@ -47,4 +54,4 @@ fclean: clean
 	rm -rf $(BIN)
 	make -C ./libft/ fclean
 
-re: fclean $(LINK_NAME)
+re: fclean $(NAME)
