@@ -23,6 +23,16 @@ static void print_allocation_ex(t_chunk* chunk)
         );
         return;
     }
+    // if (!chunk->inUse)
+    // {
+    //     ft_printf("%p - %p : 0x%x bytes InUse: %i\n", 
+    //         chunk, 
+    //         (char*)chunk + chunk->size, 
+    //         chunk->size,
+    //         chunk->inUse
+    //     );
+    //     return;
+    // }
     ft_printf("%p - %p : 0x%x bytes (0x%x used) InUse: %i\n", 
         chunk, 
         (char*)chunk + chunk->size, 

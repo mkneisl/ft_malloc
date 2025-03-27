@@ -33,7 +33,7 @@
 # define ALLOCD_HDR_SIZE (sizeof(t_chunk) - LINK_SIZE)
 # define MIN_ALLOC_SIZE ALIGN_UP(sizeof(t_chunk) + sizeof(int), 16)
 
-# define MAX_TINY_ALLOC 0x20
+# define MAX_TINY_ALLOC 0x18
 # define MAX_SMALL_ALLOC 0x500
 
 # define TINY_ZONE_SIZE ALIGN_UP(MAX_TINY_ALLOC * 100, getpagesize()) 

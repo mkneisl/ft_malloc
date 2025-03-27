@@ -16,7 +16,7 @@ static void print_allocation(t_chunk* chunk)
 {
     char* data;
 
-    data = (char*)SKIP_STRUCT(chunk, t_chunk, 1);
+    data = (char*)SKIP_STRUCT(chunk, size_t, 1);
     if (chunk->inUse)
     {
         ft_printf("%p - %p : %i bytes\n", 
