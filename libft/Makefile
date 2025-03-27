@@ -6,7 +6,7 @@
 #    By: mkneisl <mkneisl@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/04/02 13:24:54 by mkneisl           #+#    #+#              #
-#    Updated: 2025/03/27 14:12:00 by mkneisl          ###   ########.fr        #
+#    Updated: 2025/03/27 14:20:37 by mkneisl          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -73,10 +73,10 @@ all: $(NAME)
 
 $(BIN)/%.o: ./%.c
 	@$(DIR_GUARD)
-	cc -c $< $(CFLAGS) -Iinclude  -o $@
+	@cc -c $< $(CFLAGS) -Iinclude  -o $@
 
 $(NAME): $(OBJ_FILES)
-	ar rc $(NAME) $(OBJ_FILES)
+	@ar rc $(NAME) $(OBJ_FILES)
 
 clean:
 	@rm -rf $(BIN)
