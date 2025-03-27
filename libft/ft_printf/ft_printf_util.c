@@ -6,7 +6,7 @@
 /*   By: mkneisl <mkneisl@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/02 19:02:59 by mkneisl           #+#    #+#             */
-/*   Updated: 2022/07/02 19:02:59 by mkneisl          ###   ########.fr       */
+/*   Updated: 2025/03/27 12:22:47 by mkneisl          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ char	*apply_min_width(char *str, char filler, int bound, int minw)
 		return (str);
 	ret = ft_calloc(minw + 1, 1);
 	if (!ret)
-		return (NULL);
+		return (str);
 	ft_memset(ret, (int)filler, minw);
 	if (!bound)
 		ft_strlcpy(ret, str, strwidth);
@@ -48,20 +48,26 @@ char	*process_number_arg(t_prntf_arg cmd, va_list *vlst)
 
 	ret = 0;
 	if (cmd.conv_char == 'd' || cmd.conv_char == 'i')
-		ret = ft_itoa(va_arg(*vlst, int));
-	if (cmd.conv_char == 'u')
-		ret = ft_itoa_ub((unsigned long long)va_arg(*vlst, unsigned int), 10);
-	if (cmd.conv_char == 'x')
-		ret = ft_itoa_ub((unsigned long long)va_arg(*vlst, unsigned int), 16);
-	if (cmd.conv_char == 'X')
 	{
-		ret = ft_itoa_ub((unsigned long long)va_arg(*vlst, unsigned int), 16);
-		conv_to_upper(ret);
+		if (cmd.large)
+			ret = ft_itoa_sb(va_arg(*vlst, int64_t), 10);
+		else
+			ret = ft_itoa(va_arg(*vlst, int));
+	}
+	if (cmd.conv_char == 'u')
+		ret = ft_itoa_ub((uint64_t)va_arg(*vlst, unsigned int), 10);
+	if (ft_tolower(cmd.conv_char) == 'x')
+	{
+		if (cmd.large)
+			ret = ft_itoa_ub((uint64_t)va_arg(*vlst, uint64_t), 16);
+		else
+			ret = ft_itoa_ub((uint64_t)va_arg(*vlst, unsigned int), 16);
+		if (cmd.conv_char == 'X')
+			conv_to_upper(ret);
 	}
 	if (cmd.conv_char == 'p')
 	{
 		ret = ft_itoa_ub(va_arg(*vlst, unsigned long long), 16);
-		ret = append(ft_strdup("0x"), ret);
 	}
 	return ((ret));
 }

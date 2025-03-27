@@ -6,7 +6,7 @@
 /*   By: mkneisl <mkneisl@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 20:14:07 by mkneisl           #+#    #+#             */
-/*   Updated: 2022/08/04 00:27:03 by mkneisl          ###   ########.fr       */
+/*   Updated: 2025/03/27 13:37:10 by mkneisl          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,9 @@ static int	get_next_part(const char *s, unsigned int *start
 , unsigned int *length)
 {
 	unsigned int	cursor;
+	char			maxCmd;
 
+	maxCmd = 1;
 	cursor = *start + *length;
 	*start = cursor;
 	*length = 0;
@@ -59,12 +61,12 @@ static int	get_next_part(const char *s, unsigned int *start
 	}
 	if (s[++cursor] == '%')
 		return (*length = *length + 2);
-	if (is_cmd(s[cursor]) == 2 || is_cmd(s[cursor]) == 1)
+	while (is_cmd(s[cursor]) && maxCmd--)
 		cursor++;
 	*length = cursor - *start;
 	return (*length);
 }
-
+#include <stdio.h>
 char	*process_str(char *str, va_list *vlst, unsigned int *length)
 {
 	char		*ret;
@@ -81,13 +83,23 @@ char	*process_str(char *str, va_list *vlst, unsigned int *length)
 		free(str);
 		return (ft_strdup("%"));
 	}
-	cmd = parse_comand(str);
+	ft_bzero(&cmd, sizeof(t_prntf_arg));
+	parse_comand(str, &cmd);
 	if (cmd.type == 1)
 		ret = process_char_arg(cmd, vlst);
 	else if (cmd.type == 2)
 		ret = process_number_arg(cmd, vlst);
 	else
 		ret = 0;
+	if (cmd.min_width > 0)
+	{
+		if (ft_strchr(cmd.flags, '0'))
+			ret = apply_min_width(ret, '0', 1, cmd.min_width);
+		else
+			ret = apply_min_width(ret, ' ', 1, cmd.min_width);
+	}
+	if (cmd.conv_char == 'p')
+		ret = append(ft_strdup("0x"), ret);
 	*length += ft_strlen(ret);
 	free(str);
 	return (ret);

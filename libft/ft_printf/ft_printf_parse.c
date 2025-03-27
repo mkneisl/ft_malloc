@@ -6,7 +6,7 @@
 /*   By: mkneisl <mkneisl@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/23 22:02:25 by mkneisl           #+#    #+#             */
-/*   Updated: 2022/07/23 22:02:25 by mkneisl          ###   ########.fr       */
+/*   Updated: 2025/03/27 12:28:24 by mkneisl          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,13 +28,15 @@ int	is_cmd(char c)
 		return (1);
 	else if (c == 'p' || c == 'i'
 		|| c == 'u' || c == 'x'
-		|| c == 'X' || c == 'd')
+		|| c == 'X' || c == 'd'
+		|| c == 'l')
 		return (2);
+	else if (c == '-' || c == '+'
+		|| c == ' ' || c == '#'
+		|| c == '0')
+		return (5);
 	else if (ft_isdigit(c))
 		return (4);
-	else if (c == '-' || c == '+'
-		|| c == ' ' || c == '#')
-		return (5);
 	else
 		return (0);
 }
@@ -56,27 +58,30 @@ int	parse_digit(char *command, int *idx)
 	return (index);
 }
 
-t_prntf_arg	parse_comand(char *command)
+void	parse_comand(char *command, t_prntf_arg* arg)
 {
-	int			index;
-	t_prntf_arg	arg;
+	int	index;
 
 	index = 1;
-	arg.flags = 0;
-	arg.percision = -1;
-	arg.conv_char = 0;
+	arg->flags = 0;
+	arg->percision = -1;
+	arg->conv_char = 0;
 	while (is_cmd(command[index]) == 5)
 		index++;
 	if (index != 1)
-		arg.flags = ft_substr(command, 1, index - 1);
-	arg.min_width = parse_digit(command + index, &index);
+		arg->flags = ft_substr(command, 1, index - 1);
+	arg->min_width = parse_digit(command + index, &index);
 	if (command[index] == '.')
 	{
 		index++;
-		arg.percision = parse_digit(command + index, &index);
+		arg->percision = parse_digit(command + index, &index);
 	}
-	arg.type = is_cmd(command[index]);
-	if (arg.type && arg.type < 3)
-		arg.conv_char = command[index];
-	return (arg);
+	if (command[index] == 'l')
+	{
+		index++;
+		arg->large = 1;
+	}
+	arg->type = is_cmd(command[index]);
+	if (arg->type && arg->type < 3)
+		arg->conv_char = command[index];
 }
