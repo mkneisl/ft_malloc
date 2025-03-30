@@ -22,7 +22,7 @@ void	fix_str(char *str)
 	}
 }
 
-int	is_cmd(char c)
+int	cmd_type(char c)
 {
 	if (c == 'c' || c == 's')
 		return (1);
@@ -47,7 +47,7 @@ int	parse_digit(char *command, int *idx)
 	int		index;
 
 	index = 0;
-	while (is_cmd(command[index]) == 4)
+	while (cmd_type(command[index]) == 4)
 		index++;
 	if (!index)
 		return (-1);
@@ -66,7 +66,7 @@ void	parse_comand(char *command, t_prntf_arg* arg)
 	arg->flags = 0;
 	arg->percision = -1;
 	arg->conv_char = 0;
-	while (is_cmd(command[index]) == 5)
+	while (cmd_type(command[index]) == 5)
 		index++;
 	if (index != 1)
 		arg->flags = ft_substr(command, 1, index - 1);
@@ -81,7 +81,7 @@ void	parse_comand(char *command, t_prntf_arg* arg)
 		index++;
 		arg->large = 1;
 	}
-	arg->type = is_cmd(command[index]);
+	arg->type = cmd_type(command[index]);
 	if (arg->type && arg->type < 3)
 		arg->conv_char = command[index];
 }

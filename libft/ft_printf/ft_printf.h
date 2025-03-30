@@ -26,7 +26,7 @@ typedef struct s_prntf_arg
 	char	large;
 }		t_prntf_arg;
 
-int		is_cmd(char c);
+int		cmd_type(char c);
 void	fix_str(char *str);
 char	*ft_itoa_sb(long long num, int base);
 char	*ft_itoa_ub(unsigned long long num, int base);

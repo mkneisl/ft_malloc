@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "ft_printf.h"
+#include <stdint.h>
 
 void	conv_to_upper(char *str)
 {
