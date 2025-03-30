@@ -2,6 +2,7 @@
 #include "ft_malloc.h"
 #include <time.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 void memIntegrityTest(unsigned int mCount)
 {
